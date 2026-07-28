@@ -180,9 +180,7 @@ def download_worker(job_id, url, format_type, resolution, playlist_index):
         'restrictfilenames': True,
         'ignore_no_formats_error': True,
         'ffmpeg_location': ffmpeg_path,
-        'retries': 10,
         'fragment_retries': 10,
-        'socket_timeout': 30,
     }
 
     if os.path.exists('cookies.txt'):
