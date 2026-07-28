@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SaveHub by UG</title>
+  <meta name="description" content="Download videos and images from YouTube, Facebook, Instagram, and Pinterest." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=3" />
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7,10 12,15 17,10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <span>SaveHub <strong>by UG</strong></span>
+      </div>
+      <div class="header-badge">
+        <span class="dot"></span> Free &amp; Open Source
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-tag">✦ Supports up to 4K Ultra HD</div>
+      <h1 class="hero-title">Download Media from<br /><span class="gradient-text">Anywhere. Any Format.</span></h1>
+      <p class="hero-sub">Paste a YouTube, Facebook, Instagram, or Pinterest link to get started.</p>
+    </section>
+
+    <!-- Platform Tabs -->
+    <div class="platform-tabs">
+      <button class="tab-btn active" data-platform="youtube" onclick="switchPlatform('youtube')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        YouTube
+      </button>
+      <button class="tab-btn" data-platform="facebook" onclick="switchPlatform('facebook')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook
+      </button>
+      <button class="tab-btn" data-platform="instagram" onclick="switchPlatform('instagram')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        Instagram
+      </button>
+    </div>
+
+    <!-- URL Input Card -->
+    <div class="card input-card">
+      <div class="input-group" id="url-input-group">
+        <div class="input-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+          </svg>
+        </div>
+        <input
+          type="url"
+          id="url-input"
+          placeholder="Paste YouTube video URL here..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="fetch-btn" class="btn btn-primary" onclick="fetchInfo()">
+          <span class="btn-text">Fetch</span>
+          <span class="btn-loader hidden"></span>
+        </button>
+      </div>
+      <div id="url-error" class="error-msg hidden"></div>
+    </div>
+
+    <div id="loading" class="hidden" style="text-align: center; margin-top: 1rem; color: var(--text-muted);">
+      Analyzing link...
+    </div>
+    
+    <div id="results-container"></div>
+
+    <!-- Video Card Template -->
+    <template id="video-card-template">
+      <div class="video-result-wrapper" style="margin-bottom: 2rem;">
+        <div class="card video-info-card">
+          <div class="video-preview">
+            <div class="thumbnail-wrap">
+              <img class="video-thumbnail" src="" alt="Video Thumbnail" />
+              <div class="duration-badge video-duration"></div>
+              <div class="thumbnail-overlay">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="video-meta">
+              <h2 class="video-title"></h2>
+              <p class="video-uploader"></p>
+              <div class="video-stats">
+                <span class="stat video-views"></span>
+                <span class="stat video-date"></span>
+              </div>
+              <div class="quality-badges"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="download-options-wrapper" style="margin-top: 1rem;">
+          <div class="section-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+            Select Quality
+          </div>
+          <div class="quality-grid"></div>
+
+          <div class="section-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+            </svg>
+            Select Format
+          </div>
+          <div class="format-grid">
+            <button class="format-btn active" data-format="mp4">
+              <span class="format-icon">🎬</span>
+              <span class="format-name">MP4</span>
+              <span class="format-desc">Most compatible</span>
+            </button>
+            <button class="format-btn" data-format="webm">
+              <span class="format-icon">🌐</span>
+              <span class="format-name">WebM</span>
+              <span class="format-desc">Web optimized</span>
+            </button>
+            <button class="format-btn" data-format="mp3">
+              <span class="format-icon">🎵</span>
+              <span class="format-name">MP3</span>
+              <span class="format-desc">Audio only</span>
+            </button>
+          </div>
+
+          <button class="btn btn-download start-download-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="7,10 12,15 17,10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Video
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Save Location Panel (shown when Download is clicked) -->
+    <div id="save-location-panel" class="card save-panel hidden">
+      <div class="save-panel-header">
+        <div class="save-panel-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+          </svg>
+          Where should we save your file?
+        </div>
+        <button class="save-panel-cancel" onclick="cancelSavePanel()">✕ Cancel</button>
+      </div>
+
+      <div id="save-quick-folders" class="save-quick-folders">
+        <div class="save-loading">Loading folders...</div>
+      </div>
+
+      <div class="save-custom-wrap">
+        <label class="save-custom-label">Custom Path</label>
+        <div class="save-custom-row">
+          <input
+            type="text"
+            id="save-path-input"
+            class="save-path-input"
+            placeholder="e.g. D:\Movies or C:\Users\You\Desktop"
+            spellcheck="false"
+          />
+          <button class="btn btn-primary" onclick="confirmSaveAndDownload()" id="confirm-download-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="7,10 12,15 17,10"/>
+            </svg>
+            Start Download
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Card -->
+    <div id="progress-card" class="card progress-card hidden">
+      <div class="progress-header">
+        <div class="progress-status">
+          <div class="pulse-dot"></div>
+          <span id="progress-label">Downloading...</span>
+        </div>
+        <span id="progress-pct" class="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div id="progress-bar" class="progress-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-stats">
+        <span id="progress-speed"></span>
+        <span id="progress-eta"></span>
+        <span id="progress-size"></span>
+      </div>
+    </div>
+
+    <!-- Success Card -->
+    <div id="success-card" class="card success-card hidden">
+      <div class="success-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5">
+          <polyline points="20,6 9,17 4,12"/>
+        </svg>
+      </div>
+      <div class="success-content">
+        <h3>Download Complete! 🎉</h3>
+        <p id="success-filename" class="success-filename"></p>
+        <div class="success-actions">
+          <button id="open-folder-btn" class="btn btn-secondary" onclick="openFolder()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+            </svg>
+            Open Folder
+          </button>
+          <button class="btn btn-ghost" onclick="resetUI()">Download Another</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Card -->
+    <div id="error-card" class="card error-card hidden">
+      <div class="error-icon">⚠️</div>
+      <div>
+        <h3>Download Failed</h3>
+        <p id="error-message" class="error-text"></p>
+        <button class="btn btn-ghost" onclick="resetUI()" style="margin-top:1rem;">Try Again</button>
+      </div>
+    </div>
+
+    <!-- Features Row -->
+    <div class="features-row">
+      <div class="feature-item">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-text">
+          <strong>Up to 4K Ultra HD</strong>
+          <span>2160p, 1440p, 1080p, 720p and more</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-text">
+          <strong>Fast Downloads</strong>
+          <span>Maximum speed, no throttling</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🎵</div>
+        <div class="feature-text">
+          <strong>Audio Extraction</strong>
+          <span>Extract MP3 audio from any video</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-text">
+          <strong>100% Local</strong>
+          <span>Runs on your machine, no cloud</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Powered by <strong>yt-dlp</strong> &amp; <strong>Flask</strong> · For personal use only · Respect copyright laws</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=14"></script>
+</body>
+</html>
