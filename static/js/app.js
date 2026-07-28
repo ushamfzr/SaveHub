@@ -180,10 +180,7 @@ async function startDownload(url, formatType, quality, title, playlistIndex, btn
       showError('Browser does not support native saving.');
       return;
     }
-  } else {
-    showError('Please use Chrome or Edge for the native download dialog.');
-    return;
-  }
+  } 
 
   if (btn) {
     btn.disabled = true;
@@ -230,11 +227,23 @@ async function startDownload(url, formatType, quality, title, playlistIndex, btn
 
     if (btn) btn.innerHTML = 'Saving to your location...';
     
-    const fileRes = await fetch(`/api/get-file/${currentJobId}`);
-    if (!fileRes.ok) throw new Error('Could not retrieve file');
-
-    const writable = await fileHandle.createWritable();
-    await fileRes.body.pipeTo(writable);
+    if (window.showSaveFilePicker) {
+      const fileRes = await fetch(`/api/get-file/${currentJobId}`);
+      if (!fileRes.ok) throw new Error('Could not retrieve file');
+      const writable = await fileHandle.createWritable();
+      await fileRes.body.pipeTo(writable);
+    } else {
+      // Fallback for macOS / Safari / Pywebview WebKit
+      const a = document.createElement('a');
+      a.href = `/api/get-file/${currentJobId}`;
+      a.download = `${title}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      // Give the backend a second to process the download request before updating UI
+      await new Promise(r => setTimeout(r, 1000));
+    }
 
     if (btn) {
       btn.innerHTML = '✔ Download Complete!';
