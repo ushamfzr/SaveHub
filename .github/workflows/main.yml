@@ -6,43 +6,71 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ─────────────────────────────────────────────
+  # Windows Build
+  # ─────────────────────────────────────────────
   build-windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flask yt-dlp imageio-ffmpeg pywebview pyinstaller certifi
+
     - name: Build with PyInstaller
       run: python build.py
+
     - name: Upload Windows Artifact
       uses: actions/upload-artifact@v4
       with:
         name: SaveHub-Windows
         path: dist/
 
+  # ─────────────────────────────────────────────
+  # macOS Build
+  # ─────────────────────────────────────────────
   build-mac:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flask yt-dlp imageio-ffmpeg pywebview pyinstaller certifi
+        # pyobjc frameworks are required for:
+        #   - pywebview native window (Cocoa/WebKit)
+        #   - create_file_dialog (native folder picker)
         pip install pyobjc-framework-Cocoa pyobjc-framework-WebKit
+
     - name: Build with PyInstaller
       run: python build.py
-    - name: Upload Mac Artifact
+
+    - name: Package .app into DMG
+      run: |
+        APP_PATH="dist/SaveHub by UG.app"
+        DMG_PATH="dist/SaveHub_by_UG_Mac.dmg"
+        hdiutil create \
+          -volname "SaveHub by UG" \
+          -srcfolder "$APP_PATH" \
+          -ov \
+          -format UDZO \
+          "$DMG_PATH"
+
+    - name: Upload Mac DMG Artifact
       uses: actions/upload-artifact@v4
       with:
         name: SaveHub-Mac
-        path: dist/
+        path: dist/SaveHub_by_UG_Mac.dmg
