@@ -168,8 +168,13 @@ async function startDownload(url, formatType, quality, title, playlistIndex, btn
   
   const ext = (formatType === 'mp3') ? 'mp3' : formatType;
 
+  // PyWebView on macOS WebKit does NOT support showSaveFilePicker.
+  // We use direct anchor download as the primary method for the app.
+  // showSaveFilePicker is only used in standard browsers if explicitly available.
+  const useFilePicker = typeof window.showSaveFilePicker === 'function' && !window.pywebview;
+  
   let fileHandle;
-  if (window.showSaveFilePicker) {
+  if (useFilePicker) {
     try {
       fileHandle = await window.showSaveFilePicker({
         suggestedName: `${title}.${ext}`,
@@ -177,10 +182,9 @@ async function startDownload(url, formatType, quality, title, playlistIndex, btn
       });
     } catch (e) {
       if (e.name === 'AbortError') return;
-      showError('Browser does not support native saving.');
-      return;
+      // Fall through to anchor download
     }
-  } 
+  }
 
   if (btn) {
     btn.disabled = true;
@@ -225,15 +229,17 @@ async function startDownload(url, formatType, quality, title, playlistIndex, btn
       };
     });
 
-    if (btn) btn.innerHTML = 'Saving to your location...';
+    if (btn) btn.innerHTML = 'Saving to your Downloads...';
     
-    if (window.showSaveFilePicker) {
+    if (useFilePicker && fileHandle) {
+      // Standard browser: stream to user-chosen save location
       const fileRes = await fetch(`/api/get-file/${currentJobId}`);
       if (!fileRes.ok) throw new Error('Could not retrieve file');
       const writable = await fileHandle.createWritable();
       await fileRes.body.pipeTo(writable);
     } else {
-      // Fallback for macOS / Safari / Pywebview WebKit
+      // PyWebView (macOS/Windows app) and Safari:
+      // Trigger download via anchor — file saves to ~/Downloads automatically
       const a = document.createElement('a');
       a.href = `/api/get-file/${currentJobId}`;
       a.download = `${title}.${ext}`;
@@ -241,8 +247,8 @@ async function startDownload(url, formatType, quality, title, playlistIndex, btn
       a.click();
       document.body.removeChild(a);
       
-      // Give the backend a second to process the download request before updating UI
-      await new Promise(r => setTimeout(r, 1000));
+      // Wait for browser to initiate download before cleaning up
+      await new Promise(r => setTimeout(r, 2000));
     }
 
     if (btn) {
