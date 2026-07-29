@@ -165,27 +165,42 @@ let progressSource = null;
 
 async function startDownload(url, formatType, quality, title, playlistIndex, btn) {
   title = (title || 'Download').trim().replace(/[<>:"/\\|?*\n\r]/g, '').slice(0, 120);
-  
   const ext = (formatType === 'mp3') ? 'mp3' : formatType;
 
-  // PyWebView on macOS WebKit does NOT support showSaveFilePicker.
-  // We use direct anchor download as the primary method for the app.
-  // showSaveFilePicker is only used in standard browsers if explicitly available.
-  const useFilePicker = typeof window.showSaveFilePicker === 'function' && !window.pywebview;
-  
-  let fileHandle;
-  if (useFilePicker) {
+  // --- Step 1: Ask user where to save BEFORE starting download ---
+  let chosenFolder = null;
+
+  if (window.pywebview) {
+    // Desktop app: use native folder-picker via pywebview API
     try {
-      fileHandle = await window.showSaveFilePicker({
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="btn-loader" style="display:inline-block; border-color:white; border-top-color:transparent; margin-right:8px;"></span> Choosing folder...`;
+      }
+      chosenFolder = await window.pywebview.api.pick_save_folder();
+      if (!chosenFolder) {
+        // User cancelled the dialog
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Download'; }
+        return;
+      }
+    } catch (e) {
+      console.warn('Folder picker failed, will save to Downloads:', e);
+    }
+  } else if (typeof window.showSaveFilePicker === 'function') {
+    // Standard browser: use File System Access API save picker
+    try {
+      const fileHandle = await window.showSaveFilePicker({
         suggestedName: `${title}.${ext}`,
         startIn: 'downloads',
       });
+      // We'll use this handle after download completes
+      window._pendingFileHandle = fileHandle;
     } catch (e) {
       if (e.name === 'AbortError') return;
-      // Fall through to anchor download
     }
   }
 
+  // --- Step 2: Start the backend download ---
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = `<span class="btn-loader" style="display:inline-block; border-color:white; border-top-color:transparent; margin-right:8px;"></span> Starting...`;
@@ -195,13 +210,13 @@ async function startDownload(url, formatType, quality, title, playlistIndex, btn
     const res = await fetch('/api/download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url, format: formatType, resolution: quality, playlist_index: playlistIndex })
+      body: JSON.stringify({ url, format: formatType, resolution: quality, playlist_index: playlistIndex })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    
     currentJobId = data.job_id;
 
+    // --- Step 3: Track progress ---
     await new Promise((resolve, reject) => {
       let isDone = false;
       progressSource = new EventSource(`/api/progress/${currentJobId}`);
@@ -212,53 +227,57 @@ async function startDownload(url, formatType, quality, title, playlistIndex, btn
         } else if (job.status === 'processing') {
           if (btn) btn.innerHTML = 'Processing media...';
         } else if (job.status === 'complete') {
-          isDone = true;
-          progressSource.close();
-          resolve();
+          isDone = true; progressSource.close(); resolve();
         } else if (job.status === 'error') {
-          isDone = true;
-          progressSource.close();
-          reject(new Error(job.error));
+          isDone = true; progressSource.close(); reject(new Error(job.error));
         }
       };
       progressSource.onerror = () => {
-        if (!isDone) {
-          progressSource.close();
-          reject(new Error('Connection lost'));
-        }
+        if (!isDone) { progressSource.close(); reject(new Error('Connection lost')); }
       };
     });
 
-    if (btn) btn.innerHTML = 'Saving to your Downloads...';
-    
-    if (useFilePicker && fileHandle) {
-      // Standard browser: stream to user-chosen save location
+    // --- Step 4: Save file to chosen location ---
+    if (btn) btn.innerHTML = 'Saving file...';
+
+    if (chosenFolder) {
+      // Desktop: copy directly to chosen folder via backend
+      const saveRes = await fetch(`/api/save-file/${currentJobId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: chosenFolder })
+      });
+      const saveData = await saveRes.json();
+      if (!saveData.success) throw new Error(saveData.error || 'Failed to save file');
+
+    } else if (window._pendingFileHandle) {
+      // Browser with File System Access API
+      const fileHandle = window._pendingFileHandle;
+      window._pendingFileHandle = null;
       const fileRes = await fetch(`/api/get-file/${currentJobId}`);
       if (!fileRes.ok) throw new Error('Could not retrieve file');
       const writable = await fileHandle.createWritable();
       await fileRes.body.pipeTo(writable);
+
     } else {
-      // PyWebView (macOS/Windows app) and Safari:
-      // Trigger download via anchor — file saves to ~/Downloads automatically
+      // Fallback: anchor download to default Downloads folder
       const a = document.createElement('a');
       a.href = `/api/get-file/${currentJobId}`;
       a.download = `${title}.${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
-      // Wait for browser to initiate download before cleaning up
       await new Promise(r => setTimeout(r, 2000));
     }
 
+    // --- Step 5: Success state ---
     if (btn) {
       btn.innerHTML = '✔ Download Complete!';
       btn.style.background = '#22c55e';
       btn.style.borderColor = '#22c55e';
-      
       setTimeout(() => {
         btn.innerHTML = 'Download Another';
-        btn.style.background = ''; // restore original styling
+        btn.style.background = '';
         btn.style.borderColor = '';
         btn.disabled = false;
         btn.onclick = () => {

@@ -2,12 +2,11 @@ import PyInstaller.__main__
 import os
 import sys
 
-# Get path to imageio_ffmpeg binaries
+# Get path to imageio_ffmpeg bundled binary
 import imageio_ffmpeg
 ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-ffmpeg_dir = os.path.dirname(ffmpeg_exe)
 
-sep = os.pathsep  # Automatically uses ';' on Windows and ':' on Mac/Linux
+sep = os.pathsep  # ';' on Windows, ':' on Mac/Linux
 
 args = [
     'app.py',
@@ -15,6 +14,8 @@ args = [
     '--windowed',
     f'--add-data=templates{sep}templates',
     f'--add-data=static{sep}static',
+    # Bundle the ffmpeg binary into the root of _MEIPASS so the cross-platform
+    # scanner in app.py (startswith 'ffmpeg') can find it on both Windows & Mac
     f'--add-binary={ffmpeg_exe}{sep}.',
     '--hidden-import=yt_dlp',
     '--hidden-import=imageio_ffmpeg',
@@ -24,7 +25,8 @@ args = [
     '--noconfirm',
 ]
 
-# Add macOS-specific hidden imports for PyWebView (pyobjc)
+# macOS-specific hidden imports for PyWebView (pyobjc)
+# These are also required for create_file_dialog (native folder picker)
 if sys.platform == 'darwin':
     args += [
         '--hidden-import=webview.platforms.cocoa',
@@ -33,7 +35,7 @@ if sys.platform == 'darwin':
         '--hidden-import=WebKit',
         '--hidden-import=objc',
     ]
-    # Bundle the certifi SSL certs so Mac app can verify HTTPS connections
+    # Bundle certifi SSL certs so the Mac .app can verify HTTPS connections
     import certifi
     certifi_dir = os.path.dirname(certifi.where())
     args.append(f'--add-data={certifi_dir}{sep}certifi')

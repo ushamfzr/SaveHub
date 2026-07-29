@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import ssl
 import time
@@ -27,16 +28,34 @@ def get_base_path():
         return sys._MEIPASS
     return os.path.dirname(os.path.abspath(__file__))
 
+def get_exe_dir():
+    """Get the directory where the executable or script lives."""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
 app = Flask(__name__, 
             template_folder=os.path.join(get_base_path(), 'templates'),
             static_folder=os.path.join(get_base_path(), 'static'))
 app.config['SECRET_KEY'] = 'super-secret-key-ug'
 
-# Use user's temp directory directly (Safe for macOS .app bundles)
-TEMP_DIR = os.path.expanduser('~/Downloads/.savehub_temp')
+# Use user's Downloads temp directory (writable for all users)
+TEMP_DIR = os.path.join(os.path.expanduser('~'), 'Downloads', '.savehub_temp')
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+# Resolve FFmpeg path: scan _MEIPASS for the bundled binary (works on both
+# Windows 'ffmpeg-win-x86_64-v7.1.exe' and Mac 'ffmpeg-mac-arm64-v7.1'),
+# then fall back to imageio_ffmpeg discovery.
+_base = get_base_path()
+_bundled_ffmpeg = next(
+    (os.path.join(_base, f) for f in os.listdir(_base) if f.startswith('ffmpeg')),
+    None
+)
+if _bundled_ffmpeg and os.path.isfile(_bundled_ffmpeg):
+    ffmpeg_path = _bundled_ffmpeg
+else:
+    ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+
 jobs = {}
 
 def get_platform_from_url(url):
@@ -80,8 +99,9 @@ def get_info():
         'ffmpeg_location': ffmpeg_path,
     }
     
-    if os.path.exists('cookies.txt'):
-        ydl_opts['cookiefile'] = 'cookies.txt'
+    _cookies_path = os.path.join(get_exe_dir(), 'cookies.txt')
+    if os.path.exists(_cookies_path):
+        ydl_opts['cookiefile'] = _cookies_path
 
     # We DO NOT use extract_flat so we get full metadata for Instagram carousels to filter videos
     if platform == 'youtube':
@@ -200,8 +220,9 @@ def download_worker(job_id, url, format_type, resolution, playlist_index):
         'nocheckcertificate': True,  # Bypasses Mac python SSL certificate issues
     }
 
-    if os.path.exists('cookies.txt'):
-        ydl_opts['cookiefile'] = 'cookies.txt'
+    _cookies_path = os.path.join(get_exe_dir(), 'cookies.txt')
+    if os.path.exists(_cookies_path):
+        ydl_opts['cookiefile'] = _cookies_path
 
     if playlist_index:
         ydl_opts['playlist_items'] = str(playlist_index)
@@ -318,6 +339,59 @@ def get_file(job_id):
         }
     )
 
+@app.route('/api/save-file/<job_id>', methods=['POST'])
+def save_file_to_path(job_id):
+    """Copy the finished download to the user-chosen folder."""
+    data = request.json or {}
+    dest_folder = data.get('folder')
+    if not dest_folder:
+        return jsonify({'error': 'No destination folder provided'}), 400
+
+    job = jobs.get(job_id)
+    if not job or 'file_path' not in job:
+        return jsonify({'error': 'File not ready'}), 404
+
+    src_path = job['file_path']
+    filename = job.get('filename', os.path.basename(src_path))
+    dest_path = os.path.join(dest_folder, filename)
+
+    # If file already exists, add a number suffix
+    base, ext = os.path.splitext(dest_path)
+    counter = 1
+    while os.path.exists(dest_path):
+        dest_path = f"{base} ({counter}){ext}"
+        counter += 1
+
+    try:
+        shutil.copy2(src_path, dest_path)
+        # Cleanup temp
+        try:
+            os.remove(src_path)
+            os.rmdir(os.path.dirname(src_path))
+        except:
+            pass
+        return jsonify({'success': True, 'saved_to': dest_path})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+class SaveHubAPI:
+    """Python methods exposed to pywebview JS via window.pywebview.api"""
+
+    def pick_save_folder(self):
+        """Open a native folder-picker dialog and return the chosen path (or None)."""
+        try:
+            result = webview.windows[0].create_file_dialog(
+                webview.FOLDER_DIALOG,
+                allow_multiple=False
+            )
+            if result and len(result) > 0:
+                return result[0]
+        except Exception as e:
+            print(f"[WARN] pick_save_folder error: {e}")
+        return None
+
+
 def start_server():
     app.run(host='127.0.0.1', port=5000, debug=False, threaded=True)
 
@@ -325,10 +399,10 @@ if __name__ == '__main__':
     print("=" * 50)
     print("  SaveHub by UG")
     print("=" * 50)
-    
+
     t = threading.Thread(target=start_server)
     t.daemon = True
     t.start()
-    
-    webview.create_window('SaveHub by UG', 'http://127.0.0.1:5000', width=1024, height=768)
+
+    webview.create_window('SaveHub by UG', 'http://127.0.0.1:5000', width=1024, height=768, js_api=SaveHubAPI())
     webview.start()
