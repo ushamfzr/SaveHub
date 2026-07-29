@@ -1,5 +1,6 @@
 import os
 import sys
+import ssl
 import time
 import json
 import uuid
@@ -9,6 +10,17 @@ import urllib.parse
 from flask import Flask, render_template, request, jsonify, Response, send_file
 import imageio_ffmpeg
 import webview
+
+# Fix SSL certificates for macOS PyInstaller bundles
+# Without this, yt-dlp HTTPS connections fail silently inside the .app
+if sys.platform == 'darwin' and hasattr(sys, '_MEIPASS'):
+    try:
+        import certifi
+        os.environ['SSL_CERT_FILE'] = certifi.where()
+        os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+        ssl._create_default_https_context = ssl.create_default_context
+    except ImportError:
+        pass
 
 def get_base_path():
     if hasattr(sys, '_MEIPASS'):
