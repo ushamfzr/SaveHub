@@ -20,8 +20,8 @@ app = Flask(__name__,
             static_folder=os.path.join(get_base_path(), 'static'))
 app.config['SECRET_KEY'] = 'super-secret-key-ug'
 
-# Use user's temp directory or a fixed path when bundled
-TEMP_DIR = os.path.join(get_base_path(), 'temp_downloads')
+# Use user's temp directory directly (Safe for macOS .app bundles)
+TEMP_DIR = os.path.expanduser('~/Downloads/.savehub_temp')
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
@@ -184,6 +184,8 @@ def download_worker(job_id, url, format_type, resolution, playlist_index):
         'retries': 30,
         'file_access_retries': 30,
         'socket_timeout': 120,
+        'source_address': '0.0.0.0', # Force IPv4 (fixes Mac IPv6 timeout hangs)
+        'nocheckcertificate': True,  # Bypasses Mac python SSL certificate issues
     }
 
     if os.path.exists('cookies.txt'):
