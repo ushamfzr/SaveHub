@@ -22,7 +22,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flask yt-dlp imageio-ffmpeg pywebview pyinstaller certifi
+        pip install flask imageio-ffmpeg pywebview pyinstaller certifi
+        # Always install latest yt-dlp to avoid YouTube 403 errors
+        pip install yt-dlp --pre
 
     - name: Build with PyInstaller
       run: python build.py
@@ -49,7 +51,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flask yt-dlp imageio-ffmpeg pywebview pyinstaller certifi
+        pip install flask imageio-ffmpeg pywebview pyinstaller certifi
+        # Always install latest yt-dlp to avoid YouTube 403 errors
+        pip install yt-dlp --pre
         # pyobjc frameworks are required for:
         #   - pywebview native window (Cocoa/WebKit)
         #   - create_file_dialog (native folder picker)
